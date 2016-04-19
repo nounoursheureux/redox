@@ -13,6 +13,7 @@ use graphics::color::Color;
 use graphics::display::Display;
 
 use sync::WaitQueue;
+use system::error::{Error, Result, ENOTTY};
 
 fn ansi_color(value: u8) -> Color {
     match value {
@@ -50,6 +51,84 @@ fn ansi_color(value: u8) -> Color {
             Color::new(gray, gray, gray)
         },
         _ => Color::new(0, 0, 0)
+    }
+}
+
+pub struct ConsoleManager {
+    consoles: Vec<Box<Console>>,
+    current_i: usize,
+    alt_pressed: bool,
+}
+
+impl ConsoleManager {
+    pub fn new(max_consoles: usize) -> ConsoleManager {
+        let mut manager = ConsoleManager {
+            consoles: Vec::new(),
+            current_i: 0,
+            alt_pressed: false
+        };
+        for _ in 0..max_consoles {
+            manager.consoles.push(Box::new(Console::new()));
+        }
+        manager
+    }
+
+    pub fn event(&mut self, event: Event) {
+        if let EventOption::Key(key_event) = event.to_option() {
+            let _ = match key_event.scancode {
+                event::K_ALT => { self.alt_pressed = key_event.pressed },
+                event::K_F1 => { if self.alt_pressed { let _ = self.switch_console(0); } },
+                event::K_F2 => { if self.alt_pressed { let _ = self.switch_console(1); } },
+                event::K_F3 => { if self.alt_pressed { let _ = self.switch_console(2); } },
+                event::K_F4 => { if self.alt_pressed { let _ = self.switch_console(3); } },
+                event::K_F5 => { if self.alt_pressed { let _ = self.switch_console(4); } },
+                event::K_F6 => { if self.alt_pressed { let _ = self.switch_console(5); } },
+                event::K_F7 => { if self.alt_pressed { let _ = self.switch_console(6); } },
+                event::K_F8 => { if self.alt_pressed { let _ = self.switch_console(7); } },
+                event::K_F9 => { if self.alt_pressed { let _ = self.switch_console(8); } },
+                event::K_F10 => { if self.alt_pressed { let _ = self.switch_console(9); } },
+                _ => {}
+            };
+        }
+        if let Ok(console) = self.current_mut() {
+            console.event(event);
+        }
+    }
+
+    pub fn get(&self, i: usize) -> Result<&Box<Console>> {
+        self.consoles.get(i).ok_or(Error::new(ENOTTY))
+    }
+
+    pub fn get_mut(&mut self, i: usize) -> Result<&mut Box<Console>> {
+        self.consoles.get_mut(i).ok_or(Error::new(ENOTTY))
+    }
+
+    pub fn current(&self) -> Result<&Box<Console>> {
+        self.consoles.get(self.current_i).ok_or(Error::new(ENOTTY))
+    }
+
+    pub fn current_mut(&mut self) -> Result<&mut Box<Console>> {
+        self.consoles.get_mut(self.current_i).ok_or(Error::new(ENOTTY))
+    }
+
+    pub fn switch_console(&mut self, i: usize) -> Result<()> {
+        if let Ok(new_console) = self.get_mut(i) {
+            new_console.redraw = true;
+            new_console.draw = true;
+            new_console.write(&[]);
+        } else {
+            return Err(Error::new(ENOTTY));
+        }
+        self.current_i = i;
+        Ok(())
+    }
+
+    pub fn can_draw(&self) -> bool {
+        if let Ok(console) = self.current() {
+            console.draw
+        } else {
+            false
+        }
     }
 }
 

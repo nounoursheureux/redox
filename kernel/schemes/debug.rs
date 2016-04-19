@@ -34,8 +34,9 @@ impl Resource for DebugResource {
     }
 
     fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
+        let mut console_manager = ::env().console_manager.lock();
         if self.command.is_empty() {
-            self.command = ::env().console.lock().commands.receive();
+            self.command = try!(console_manager.current_mut()).commands.receive();
         }
 
         let mut i = 0;
@@ -48,12 +49,14 @@ impl Resource for DebugResource {
     }
 
     fn write(&mut self, buf: &[u8]) -> Result<usize> {
-        ::env().console.lock().write(buf);
+        let mut console_manager = ::env().console_manager.lock();
+        try!(console_manager.current_mut()).write(buf);
         Ok(buf.len())
     }
 
     fn sync(&mut self) -> Result<()> {
-        let mut console = ::env().console.lock();
+        let mut console_manager = ::env().console_manager.lock();
+        let mut console = try!(console_manager.current_mut());
         console.redraw = true;
         console.write(&[]);
         Ok(())
@@ -74,7 +77,8 @@ impl KScheme for DebugScheme {
     }
 
     fn open(&mut self, _: Url, _: usize) -> Result<Box<Resource>> {
-        let console = ::env().console.lock();
+        let console_manager = ::env().console_manager.lock();
+        let console = try!(console_manager.current());
         if let Some(ref display) = console.display {
             Ok(box DebugResource {
                 path: format!("debug:{}/{}", display.width/8, display.height/16),

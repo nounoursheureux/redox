@@ -14,7 +14,7 @@ use sync::WaitQueue;
 use system::error::{Error, Result, ENOENT, EEXIST};
 use system::syscall::{O_CREAT, Stat};
 
-use self::console::Console;
+use self::console::ConsoleManager;
 
 /// The Kernel Console
 pub mod console;
@@ -29,8 +29,8 @@ pub struct Environment {
     /// Monotonic clock
     pub clock_monotonic: Intex<Duration>,
 
-    /// Default console
-    pub console: Intex<Console>,
+    /// Console manager
+    pub console_manager: Intex<ConsoleManager>,
     /// Disks
     pub disks: Intex<Vec<Box<Disk>>>,
     /// Pending events
@@ -50,7 +50,7 @@ impl Environment {
             clock_realtime: Intex::new(Duration::new(0, 0)),
             clock_monotonic: Intex::new(Duration::new(0, 0)),
 
-            console: Intex::new(Console::new()),
+            console_manager: Intex::new(ConsoleManager::new(9)),
             disks: Intex::new(Vec::new()),
             events: WaitQueue::new(),
             schemes: Intex::new(Vec::new()),

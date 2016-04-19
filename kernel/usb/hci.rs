@@ -159,7 +159,7 @@ pub trait Hci {
                                                 right_button: buttons & 2 == 2,
                                             };
 
-                                            if ::env().console.lock().draw {
+                                            if ::env().console_manager.lock().can_draw() {
                                                 //ignore mouse event
                                             } else {
                                                 ::env().events.send(mouse_event.to_event());

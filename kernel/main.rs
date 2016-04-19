@@ -346,7 +346,9 @@ unsafe fn init(tss_data: usize) {
         Some(ref mut env) => {
             env.contexts.lock().push(Context::root());
 
-            env.console.lock().draw = true;
+            if let Ok(ref mut console) = env.console_manager.lock().current_mut() {
+                console.draw = true;
+            }
 
             debugln!("\x1B[1mRedox {} bits\x1B[0m", mem::size_of::<usize>() * 8);
             debugln!("  * text={:X}:{:X} rodata={:X}:{:X}",
@@ -415,11 +417,13 @@ unsafe fn init(tss_data: usize) {
                     do_sys_open(stdio_c.as_ptr(), 0).unwrap();
                     do_sys_open(stdio_c.as_ptr(), 0).unwrap();
 
-                    if let Some(ref display) = ::env().console.lock().display {
-                        let mut contexts = ::env().contexts.lock();
-                        let current = contexts.current_mut().unwrap();
-                        current.set_env_var("COLUMNS", &format!("{}", display.width/8)).unwrap();
-                        current.set_env_var("LINES", &format!("{}", display.height/16)).unwrap();
+                    if let Ok(console) = ::env().console_manager.lock().current() {
+                        if let Some(ref display) = console.display {
+                            let mut contexts = ::env().contexts.lock();
+                            let current = contexts.current_mut().unwrap();
+                            current.set_env_var("COLUMNS", &format!("{}", display.width/8)).unwrap();
+                            current.set_env_var("LINES", &format!("{}", display.height/16)).unwrap();
+                        }
                     }
                 }
 

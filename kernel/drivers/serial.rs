@@ -54,7 +54,11 @@ impl KScheme for Serial {
             let mut c = self.data.read() as char;
             let mut sc = 0;
 
-            let mut console = ::env().console.lock();
+            let mut console_manager = ::env().console_manager.lock();
+            let mut console = match console_manager.current_mut() {
+                Ok(c) => c,
+                Err(_) => return,
+            };
 
             if self.escape {
                 self.escape = false;
