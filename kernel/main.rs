@@ -72,6 +72,7 @@ use schemes::initfs::InitFsScheme;
 use schemes::interrupt::InterruptScheme;
 use schemes::memory::MemoryScheme;
 use schemes::test::TestScheme;
+use schemes::tty::TtyScheme;
 
 use syscall::execute::execute;
 use syscall::{do_sys_chdir, do_sys_exit, do_sys_open, syscall_handle};
@@ -377,6 +378,7 @@ unsafe fn init(tss_data: usize) {
             env.schemes.lock().push(box InterruptScheme);
             env.schemes.lock().push(box MemoryScheme);
             env.schemes.lock().push(box TestScheme);
+            env.schemes.lock().push(box TtyScheme);
 
             //TODO: Do not do this! Find a better way
             let mut disks = Vec::new();

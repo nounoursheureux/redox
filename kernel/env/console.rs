@@ -115,11 +115,15 @@ impl ConsoleManager {
         if let Ok(new_console) = self.get_mut(i) {
             new_console.redraw = true;
             new_console.draw = true;
-            new_console.write(&[]);
+            new_console.write(&[8]);
         } else {
             return Err(Error::new(ENOTTY));
         }
+        let old_i = self.current_i;
         self.current_i = i;
+        /* if let Ok(mut old_console) = self.get_mut(old_i) {
+            old_console.draw = false;
+        }*/
         Ok(())
     }
 

@@ -18,3 +18,5 @@ pub mod memory;
 pub mod pipe;
 /// Tests
 pub mod test;
+/// Virtual terminals
+pub mod tty;

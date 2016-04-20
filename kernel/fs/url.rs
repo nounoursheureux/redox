@@ -9,7 +9,7 @@ use core::result::Result::{Ok, Err};
 
 use common::slice::GetSlice;
 
-use system::error::{Result, Error};
+use system::error::{Result, Error, EINVAL};
 use system::syscall::{O_CREAT, O_RDWR, O_TRUNC};
 
 /// An URL, see wiki
@@ -33,7 +33,7 @@ impl<'a> Url<'a> {
         let split = if let Some(x) = string.find(':') {
             x
         } else {
-            return Err(Error::new(22));
+            return Err(Error::new(EINVAL));
         };
 
         Ok(Url {
